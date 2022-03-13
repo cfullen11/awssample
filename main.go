@@ -27,6 +27,7 @@ func main() {
 	createEcs(ctx)
 }
 
+//Setup infra-admin IAM access at run time.
 func setInfraAdminAccess()(context.Context, *iam.CreateAccessKeyOutput) {
 	userName := "infra-admin"
 	maxItems := 10
@@ -87,6 +88,7 @@ func setInfraAdminAccess()(context.Context, *iam.CreateAccessKeyOutput) {
 	return ctx, nk
 }
 
+//Set the credentials for infra-admin that are created at runtime
 func setCreds(nk *iam.CreateAccessKeyOutput) {
 	os.Setenv("AWS_ACCESS_KEY_ID", *nk.AccessKey.AccessKeyId)
 	os.Setenv("AWS_SECRET_ACCESS_KEY", *nk.AccessKey.SecretAccessKey)
@@ -94,6 +96,7 @@ func setCreds(nk *iam.CreateAccessKeyOutput) {
 	time.Sleep(9 * time.Second )
 }
 
+//Create an ECR client to be used for creating repos and pushing images
 func getEcrClient() *ecr.Client{
 	ctx := context.Background()
 
@@ -105,6 +108,7 @@ func getEcrClient() *ecr.Client{
 	return client
 }
 
+//Create and ECS client to be used to create ECS 
 func getEcsClient() *ecs.Client{
 	ctx := context.Background()
 
@@ -116,6 +120,7 @@ func getEcsClient() *ecs.Client{
 	return svcClient
 }
 
+//Get the existing repos to check if the repo already exists
 func getRepos(ctx context.Context)*ecr.Client{
 	client := getEcrClient()
 	repoName := "skodaice"
@@ -133,6 +138,7 @@ func getRepos(ctx context.Context)*ecr.Client{
 	return client
 }
 
+//Create the ECR if it does not already exist
 func createEcr(ctx context.Context, repoName *string, client *ecr.Client){
 	output, err := client.CreateRepository(ctx, &ecr.CreateRepositoryInput{
 		RepositoryName: repoName,
@@ -143,6 +149,7 @@ func createEcr(ctx context.Context, repoName *string, client *ecr.Client){
 	fmt.Printf("Repo %s created", *output.Repository.RepositoryName)
 }
 
+//Push an Image to ECR this is still a work in progress
 func pushImage(ctx context.Context, client *ecr.Client){
 	manifest := `locationName:"dockerfile" min:"1" type:"string" required:"true"`
 	imageTag := "latest"
@@ -159,6 +166,7 @@ func pushImage(ctx context.Context, client *ecr.Client){
 	fmt.Println(output.Image.ImageId)
 }
 
+//Create ECS in the our aws account
 func createEcs(ctx context.Context){
 	svcClient := getEcsClient()
 	clusterName := "skodaiceecs"
